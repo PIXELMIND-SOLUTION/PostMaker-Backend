@@ -20,15 +20,10 @@ app.use('/api', notiRoute);
 app.use('/api', cateRoute);
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})  .then(() => {
-    console.log('✅ MongoDB Connected')
-  })
-  .catch((err) => {
-    console.log('Mongo Error:', err)}
-);
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ MongoDB Connected'))
+  .catch((err) => console.error('❌ MongoDB connection error:', err));
+
 
 // Start Server
 const PORT = process.env.PORT || 5001;
