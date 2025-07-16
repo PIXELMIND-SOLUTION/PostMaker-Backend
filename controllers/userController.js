@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const User = require('../models/userModel');
-const { generateTempToken, verifyTempToken } = require('../utils/jwtToken');
+const { generateTempToken, verifyTempToken } = require('../utils/jws');
 
 let registerToken = null;
 let tempForgotToken = null;
