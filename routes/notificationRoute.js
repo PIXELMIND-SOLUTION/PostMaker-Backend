@@ -1,11 +1,12 @@
-const express = require('express');
-const router = express.Router();
-const {
+import express from 'express';
+import {
   createNotification,
   getAllNotifications,
   markAsRead,
   deleteNotification
-} = require('../controllers/notificationController');
+} from '../controllers/notificationController.js';
+
+const router = express.Router();
 
 // ➕ Create notification
 router.post('/notification', createNotification);
@@ -19,4 +20,4 @@ router.put('/notification/read/:id', markAsRead);
 // ❌ Delete a notification
 router.delete('/notification/:id', deleteNotification);
 
-module.exports = router;
+export default router;

@@ -1,10 +1,12 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const cors = require('cors');
-const userRoutes = require('./routes/authRoute');
-const notiRoute = require('./routes/notificationRoute');
-const cateRoute = require('./routes/categoryRoute');
+// server.js
+import express from 'express';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import cors from 'cors';
+
+import userRoutes from './routes/authRoute.js';
+import notiRoute from './routes/notificationRoute.js';
+import cateRoute from './routes/categoryRoute.js';
 
 dotenv.config();
 const app = express();
@@ -12,7 +14,6 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors());
-app.use(express.json());
 
 // Routes
 app.use('/api', userRoutes);
@@ -24,9 +25,8 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB Connected'))
   .catch((err) => console.error('❌ MongoDB connection error:', err));
 
-
 // Start Server
 const PORT = process.env.PORT || 5001;
- app.listen(PORT, () => {
-    console.log(`🚀 server running on port ${PORT}`)
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });

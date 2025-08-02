@@ -1,12 +1,12 @@
-const bcrypt = require('bcrypt');
-const User = require('../models/userModel');
-const { generateTempToken, verifyTempToken } = require('../utils/jws');
+import bcrypt from 'bcrypt';
+import User from '../models/userModel.js';
+import { generateTempToken, verifyTempToken } from '../utils/jws.js';
 
 let registerToken = null;
 let tempForgotToken = null;
 let verifiedForgotPhone = null;
 
-const register = async (req, res) => {
+export const register = async (req, res) => {
   try {
     const { fullName, email, phoneNumber, password, confirmPassword } = req.body;
     if (!fullName || !email || !phoneNumber || !password || !confirmPassword) {
@@ -28,7 +28,7 @@ const register = async (req, res) => {
   }
 };
 
-const verifyOtp = async (req, res) => {
+export const verifyOtp = async (req, res) => {
   try {
     const { otp } = req.body;
     if (!otp || otp !== '1234' || !registerToken) return res.status(400).json({ message: "Invalid OTP" });
@@ -47,7 +47,7 @@ const verifyOtp = async (req, res) => {
   }
 };
 
-const login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     const { phoneNumber, password } = req.body;
     const user = await User.findOne({ phoneNumber });
@@ -68,7 +68,7 @@ const login = async (req, res) => {
   }
 };
 
-const sendForgotOtp = async (req, res) => {
+export const sendForgotOtp = async (req, res) => {
   try {
     const { phoneNumber } = req.body;
     const user = await User.findOne({ phoneNumber });
@@ -81,7 +81,7 @@ const sendForgotOtp = async (req, res) => {
   }
 };
 
-const verifyForgotOtp = async (req, res) => {
+export const verifyForgotOtp = async (req, res) => {
   try {
     const { otp } = req.body;
     if (!otp || otp !== '1234' || !tempForgotToken) return res.status(400).json({ message: "Invalid OTP" });
@@ -94,7 +94,7 @@ const verifyForgotOtp = async (req, res) => {
   }
 };
 
-const resetForgotPassword = async (req, res) => {
+export const resetForgotPassword = async (req, res) => {
   try {
     const { newPassword, confirmPassword } = req.body;
     if (!verifiedForgotPhone) return res.status(400).json({ message: "OTP verification required" });
@@ -109,7 +109,7 @@ const resetForgotPassword = async (req, res) => {
   }
 };
 
-const getProfile = async (req, res) => {
+export const getProfile = async (req, res) => {
   try {
     const { userId } = req.params;
     const user = await User.findById(userId);
@@ -129,7 +129,7 @@ const getProfile = async (req, res) => {
   }
 };
 
-const updateProfile = async (req, res) => {
+export const updateProfile = async (req, res) => {
   try {
     const { userId } = req.params;
     const updatedUser = await User.findByIdAndUpdate(userId, req.body, { new: true });
@@ -149,7 +149,7 @@ const updateProfile = async (req, res) => {
   }
 };
 
-const deleteProfile = async (req, res) => {
+export const deleteProfile = async (req, res) => {
   try {
     const deletedUser = await User.findByIdAndDelete(req.params.userId);
     if (!deletedUser) return res.status(404).json({ message: 'User not found ❌' });
@@ -160,7 +160,7 @@ const deleteProfile = async (req, res) => {
   }
 };
 
-const addAddress = async (req, res) => {
+export const addAddress = async (req, res) => {
   try {
     const { userId } = req.params;
     const address = req.body;
@@ -180,7 +180,7 @@ const addAddress = async (req, res) => {
   }
 };
 
-const getAddress = async (req, res) => {
+export const getAddress = async (req, res) => {
   try {
     const { userId } = req.params;
     const user = await User.findById(userId).select('address');
@@ -195,7 +195,7 @@ const getAddress = async (req, res) => {
   }
 };
 
-const updateAddress = async (req, res) => {
+export const updateAddress = async (req, res) => {
   try {
     const { userId } = req.params;
     const newAddress = req.body;
@@ -217,7 +217,7 @@ const updateAddress = async (req, res) => {
   }
 };
 
-const deleteAddress = async (req, res) => {
+export const deleteAddress = async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
     if (!user) return res.status(404).json({ message: 'User not found ❌' });
@@ -231,7 +231,7 @@ const deleteAddress = async (req, res) => {
   }
 };
 
-const postLocation = async (req, res) => {
+export const postLocation = async (req, res) => {
   try {
     const { userId } = req.params;
     const { latitude, longitude } = req.body;
@@ -263,7 +263,7 @@ const postLocation = async (req, res) => {
   }
 };
 
-const updateLocation = async (req, res) => {
+export const updateLocation = async (req, res) => {
   try {
     const { userId } = req.params;
     const { latitude, longitude } = req.body;
@@ -292,7 +292,7 @@ const updateLocation = async (req, res) => {
   }
 };
 
-const getLocation = async (req, res) => {
+export const getLocation = async (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -311,21 +311,23 @@ const getLocation = async (req, res) => {
   }
 };
 
-module.exports = {
-  register,
-  verifyOtp,
-  login,
-  sendForgotOtp,
-  verifyForgotOtp,
-  resetForgotPassword,
-  getProfile,
-  updateProfile,
-  deleteProfile,
-  addAddress,
-  getAddress,
-  updateAddress,
-  deleteAddress,
-  postLocation,
-  updateLocation,
-  getLocation
+export const deleteLocation = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found ❌' });
+
+    if (user.latitude === undefined && user.longitude === undefined) {
+      return res.status(400).json({ message: 'No location found to delete ❌' });
+    }
+
+    user.latitude = undefined;
+    user.longitude = undefined;
+    await user.save();
+
+    res.status(200).json({ message: 'Location deleted successfully ✅' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete location ❌', error: err.message });
+  }
 };

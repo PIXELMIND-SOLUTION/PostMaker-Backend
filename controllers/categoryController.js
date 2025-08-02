@@ -1,128 +1,110 @@
-const Category = require("../models/categoryModel");
-const Logo =require('../models/logModel')
-const Banner = require("../models/bannerModel");
-const cloudinary = require("../config/cloudinary");
-const fs = require("fs");
+import { Category, DueDate } from "../models/categoryModel.js";
+import Banner from "../models/bannerModel.js";
+import cloudinary from "../config/cloudinary.js";
+import fs from "fs";
 
-exports.createCategory = async (req, res) => {
+// ➕ Create Category
+export const createCategory = async (req, res) => {
   try {
     const { categoryName } = req.body;
     const file = req.file;
-    if (!file) return res.status(400).json({ message: "Image is required" });
+    if (!categoryName || !file) {
+      return res.status(400).json({ message: "Category name and image are required." });
+    }
 
     const uploaded = await cloudinary.uploader.upload(file.path, { folder: "categories" });
-    fs.unlinkSync(file.path);
+    fs.unlinkSync(file.path); // delete local file
 
-    const category = await Category.create({ categoryName, imageUrl: uploaded.secure_url });
+    const category = await Category.create({
+      categoryName,
+      imageUrl: uploaded.secure_url,
+    });
+
     res.status(201).json({ success: true, data: category });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// Get all categories
-exports.getAllCategories = async (req, res) => {
+// 📥 Get All Categories
+export const getAllCategories = async (req, res) => {
   try {
-    const categories = await Category.find(); // ✅ Mongoose method
+    const categories = await Category.find().sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: categories });
   } catch (err) {
-    console.error('❌ Error fetching categories:', err);
-    res.status(500).json({ success: false, message: 'Server Error' });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// Create Logo Category
-exports.createLogo = async (req, res) => {
+// 📥 Get Single Category by ID
+export const getCategoryById = async (req, res) => {
   try {
-    const { categoryName, logoName } = req.body;
+    const category = await Category.findById(req.params.id);
+    if (!category) return res.status(404).json({ message: "Category not found" });
+    res.status(200).json({ success: true, data: category });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ✏️ Update Category
+export const updateCategory = async (req, res) => {
+  try {
+    const { categoryName } = req.body;
     const file = req.file;
+    const category = await Category.findById(req.params.id);
 
-    if (!file) return res.status(400).json({ success: false, message: 'logoImage is required' });
-
-    const uploaded = await cloudinary.uploader.upload(file.path, { folder: 'logos' });
-    fs.unlinkSync(file.path);
-
-    const newLogo = await Logo.create({
-      categoryName,
-      logoName,
-      logoImage: uploaded.secure_url
-    });
-
-    res.status(201).json({ success: true, data: newLogo });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-// Get all logos
-exports.getAllLogos = async (req, res) => {
-  try {
-    const logos = await Logo.find();
-    res.status(200).json({ success: true, data: logos });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-// Get logo by ID
-exports.getLogoById = async (req, res) => {
-  try {
-    const logo = await Logo.findById(req.params.id);
-    if (!logo) return res.status(404).json({ success: false, message: 'Logo not found' });
-    res.status(200).json({ success: true, data: logo });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-// Update Logo
-exports.updateLogo = async (req, res) => {
-  try {
-    const { categoryName, logoName } = req.body;
-    const file = req.file;
-
-    const logo = await Logo.findById(req.params.id);
-    if (!logo) return res.status(404).json({ success: false, message: 'Logo not found' });
+    if (!category) return res.status(404).json({ message: "Category not found" });
 
     if (file) {
-      const uploaded = await cloudinary.uploader.upload(file.path, { folder: 'logos' });
+      const uploaded = await cloudinary.uploader.upload(file.path, { folder: "categories" });
       fs.unlinkSync(file.path);
-      logo.logoImage = uploaded.secure_url;
+      category.imageUrl = uploaded.secure_url;
     }
 
-    if (categoryName) logo.categoryName = categoryName;
-    if (logoName) logo.logoName = logoName;
+    if (categoryName) category.categoryName = categoryName;
 
-    const updatedLogo = await logo.save();
-    res.status(200).json({ success: true, data: updatedLogo });
+    await category.save();
+
+    res.status(200).json({ success: true, data: category });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// Delete Logo
-exports.deleteLogo = async (req, res) => {
+// ❌ Delete Category
+export const deleteCategory = async (req, res) => {
   try {
-    const logo = await Logo.findByIdAndDelete(req.params.id);
-    if (!logo) return res.status(404).json({ success: false, message: 'Logo not found' });
-    res.status(200).json({ success: true, message: 'Logo deleted successfully' });
+    const category = await Category.findByIdAndDelete(req.params.id);
+    if (!category) return res.status(404).json({ message: "Category not found" });
+    res.status(200).json({ success: true, message: "Category deleted successfully" });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
+/* ---------------------------- Banner ---------------------------- */
 
-//Banner
-
-
-exports.createBanner = async (req, res) => {
+// ➕ Create banner with multiple images
+export const createBanner = async (req, res) => {
   try {
-    const file = req.file?.path;
-    if (!file) return res.status(400).json({ success: false, message: "Image is required" });
+    const files = req.files;
 
-    const result = await cloudinary.uploader.upload(file, { folder: "banners" });
-    const newBanner = new Banner({ bannerImage: result.secure_url });
-    await newBanner.save();
+    if (!files || files.length === 0) {
+      return res.status(400).json({ success: false, message: "At least one image is required" });
+    }
+
+    const uploadedImages = [];
+
+    for (const file of files) {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: 'banners'
+      });
+      uploadedImages.push(result.secure_url);
+      fs.unlinkSync(file.path);
+    }
+
+    const newBanner = await Banner.create({ bannerImage: uploadedImages });
 
     res.status(201).json({ success: true, message: "Banner uploaded", data: newBanner });
   } catch (error) {
@@ -130,7 +112,8 @@ exports.createBanner = async (req, res) => {
   }
 };
 
-exports.getAllBanners = async (req, res) => {
+// 📥 Get all banners
+export const getAllBanners = async (req, res) => {
   try {
     const banners = await Banner.find().sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: banners });
@@ -139,28 +122,47 @@ exports.getAllBanners = async (req, res) => {
   }
 };
 
-exports.getBannerById = async (req, res) => {
+// 📥 Get banner by ID
+export const getBannerById = async (req, res) => {
   try {
     const banner = await Banner.findById(req.params.id);
-    if (!banner) return res.status(404).json({ success: false, message: "Banner not found" });
-
+    if (!banner) {
+      return res.status(404).json({ success: false, message: "Banner not found" });
+    }
     res.status(200).json({ success: true, data: banner });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-exports.updateBanner = async (req, res) => {
+// ✏️ Update banner images (replace with new images)
+export const updateBanner = async (req, res) => {
   try {
-    const file = req.file?.path;
-    if (!file) return res.status(400).json({ success: false, message: "New image required" });
+    const files = req.files;
 
-    const result = await cloudinary.uploader.upload(file, { folder: "banners" });
+    if (!files || files.length === 0) {
+      return res.status(400).json({ success: false, message: "New images are required" });
+    }
+
+    const uploadedImages = [];
+
+    for (const file of files) {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: 'banners'
+      });
+      uploadedImages.push(result.secure_url);
+      fs.unlinkSync(file.path);
+    }
+
     const updatedBanner = await Banner.findByIdAndUpdate(
       req.params.id,
-      { bannerImage: result.secure_url },
+      { bannerImage: uploadedImages },
       { new: true }
     );
+
+    if (!updatedBanner) {
+      return res.status(404).json({ success: false, message: "Banner not found" });
+    }
 
     res.status(200).json({ success: true, message: "Banner updated", data: updatedBanner });
   } catch (error) {
@@ -168,13 +170,106 @@ exports.updateBanner = async (req, res) => {
   }
 };
 
-exports.deleteBanner = async (req, res) => {
+// ❌ Delete banner
+export const deleteBanner = async (req, res) => {
   try {
     const banner = await Banner.findByIdAndDelete(req.params.id);
-    if (!banner) return res.status(404).json({ success: false, message: "Banner not found" });
+    if (!banner) {
+      return res.status(404).json({ success: false, message: "Banner not found" });
+    }
 
     res.status(200).json({ success: true, message: "Banner deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/* ---------------------------- DueDate ---------------------------- */
+
+// ➕ Create DueDate
+export const createDueDate = async (req, res) => {
+  try {
+    const { dueDate } = req.body;
+    const file = req.file?.path;
+    if (!file || !dueDate) {
+      return res.status(400).json({ success: false, message: "Image and due date are required." });
+    }
+
+    const uploadedImage = await cloudinary.uploader.upload(file, {
+      folder: "dueDates"
+    });
+    fs.unlinkSync(file);
+
+    const newDueDate = await DueDate.create({
+      image: uploadedImage.secure_url,
+      dueDate
+    });
+
+    res.status(201).json({ success: true, data: newDueDate });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
+export const getAllDueDates = async (req, res) => {
+  try {
+    const dueDates = await DueDate.find().sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: dueDates });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
+export const getDueDateById = async (req, res) => {
+  try {
+    const dueDate = await DueDate.findById(req.params.id);
+    if (!dueDate) {
+      return res.status(404).json({ success: false, message: "DueDate not found" });
+    }
+    res.status(200).json({ success: true, data: dueDate });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
+export const updateDueDateById = async (req, res) => {
+  try {
+    const { dueDate } = req.body;
+    const file = req.file?.path;
+
+    const updateData = {};
+
+    if (dueDate) updateData.dueDate = dueDate;
+
+    if (file) {
+      const uploadedImage = await cloudinary.uploader.upload(file, {
+        folder: "dueDates"
+      });
+      fs.unlinkSync(file);
+      updateData.image = uploadedImage.secure_url;
+    }
+
+    const updated = await DueDate.findByIdAndUpdate(req.params.id, updateData, { new: true });
+
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "DueDate not found" });
+    }
+
+    res.status(200).json({ success: true, data: updated });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
+export const deleteDueDateById = async (req, res) => {
+  try {
+    const deleted = await DueDate.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: "DueDate not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 };

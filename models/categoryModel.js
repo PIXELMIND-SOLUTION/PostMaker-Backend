@@ -1,14 +1,16 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const categorySchema = new mongoose.Schema({
-  categoryName: {
-    type: String,
-    required: true
-  },
-  imageUrl: {
-    type: String,
-    required: true
-  }
+  categoryName: { type: String, required: true },
+  imageUrl: { type: String, required: true }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Category', categorySchema);
+const dueDateSchema = new mongoose.Schema({
+  image: { type: String, required: true },
+  dueDate: { type: Date, required: true }
+}, { timestamps: true });
+
+const Category = mongoose.model('Category', categorySchema);
+const DueDate = mongoose.model('DueDate', dueDateSchema);
+
+export { Category, DueDate };

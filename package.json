@@ -1,11 +1,12 @@
 {
   "name": "poster-making",
   "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
+  "main": "server.js",
+    "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "nodemon server.js",
+    "dev": "nodemon server.js",
+    "postinstall": "npm rebuild sqlite3"
   },
   "keywords": [],
   "author": "",

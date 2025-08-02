@@ -1,7 +1,5 @@
-const express = require('express');
-const router = express.Router();
-
-const {
+import express from 'express';
+import {
   register,
   verifyOtp,
   login,
@@ -14,45 +12,41 @@ const {
   addAddress,
   getAddress,
   updateAddress,
-  deleteAddress, 
+  deleteAddress,
   postLocation,
   updateLocation,
   getLocation,
-  
-} = require('../controllers/userController');
+  deleteLocation
+} from '../controllers/userController.js';
 
-// 📝 Registration
+const router = express.Router();
+
+// Auth
 router.post('/register', register);
 router.post('/verify-otp', verifyOtp);
 router.post('/login', login);
-router.post('/forgot-password/send-otp', sendForgotOtp);
-router.post('/forgot-password/verify-otp', verifyForgotOtp);
-router.post('/forgot-password/reset', resetForgotPassword);
-// 👤 User Profile
-router.get('/profile/:userId', getProfile);              // Get user profile
-router.put('/profile/:userId', updateProfile);           // Update user profile
-router.delete('/profile/:userId', deleteProfile);
 
-// ➕ Add address
-router.post('/address/:userId', addAddress);
+// Forgot Password
+router.post('/forgot/send-otp', sendForgotOtp);
+router.post('/forgot/verify-otp', verifyForgotOtp);
+router.post('/forgot/reset-password', resetForgotPassword);
 
-// ✏️ Update address
-router.put('/address/:userId', updateAddress);
+// Profile
+router.get('/user/:userId', getProfile);
+router.put('/user/:userId', updateProfile);
+router.delete('/user/:userId', deleteProfile);
 
-// 🔍 Get address
-router.get('/address/:userId', getAddress);  
-router.delete('/address/:userId', deleteAddress);
+// Address
+router.post('/user/:userId/address', addAddress);
+router.get('/user/:userId/address', getAddress);
+router.put('/user/:userId/address', updateAddress);
+router.delete('/user/:userId/address', deleteAddress);
 
-
-
-// POST location (only once)
-router.post('/location/:userId', postLocation);
-
-// PUT location (update)
-router.put('/location/:userId', updateLocation);
-
-// GET location
-router.get('/location/:userId', getLocation);
+// Location
+router.post('/user/:userId/location', postLocation);
+router.put('/user/:userId/location', updateLocation);
+router.get('/user/:userId/location', getLocation);
+router.delete('/location/:userId', deleteLocation);
 
 
-module.exports = router;
+export default router;

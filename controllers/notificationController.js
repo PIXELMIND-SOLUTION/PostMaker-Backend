@@ -1,7 +1,7 @@
-const Notification = require('../models/notificationModel');
+import Notification from '../models/notificationModel.js';
 
 // ✅ Create notification
-const createNotification = async (req, res) => {
+export const createNotification = async (req, res) => {
   try {
     const { message, type } = req.body;
 
@@ -13,7 +13,7 @@ const createNotification = async (req, res) => {
 };
 
 // ✅ Get all notifications
-const getAllNotifications = async (req, res) => {
+export const getAllNotifications = async (req, res) => {
   try {
     const notifications = await Notification.find().sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: notifications });
@@ -23,7 +23,7 @@ const getAllNotifications = async (req, res) => {
 };
 
 // ✅ Mark notification as read
-const markAsRead = async (req, res) => {
+export const markAsRead = async (req, res) => {
   try {
     const notification = await Notification.findByIdAndUpdate(
       req.params.id,
@@ -42,7 +42,7 @@ const markAsRead = async (req, res) => {
 };
 
 // ✅ Delete notification
-const deleteNotification = async (req, res) => {
+export const deleteNotification = async (req, res) => {
   try {
     const notification = await Notification.findByIdAndDelete(req.params.id);
 
@@ -54,11 +54,4 @@ const deleteNotification = async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: 'Delete failed', error: err.message });
   }
-};
-
-module.exports = {
-  createNotification,
-  getAllNotifications,
-  markAsRead,
-  deleteNotification
 };
