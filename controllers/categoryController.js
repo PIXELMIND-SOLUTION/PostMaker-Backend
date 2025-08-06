@@ -1,5 +1,6 @@
 import { Category, DueDate } from "../models/categoryModel.js";
 import Banner from "../models/bannerModel.js";
+import Container from '../models/containerModel.js';
 import cloudinary from "../config/cloudinary.js";
 import fs from "fs";
 
@@ -271,5 +272,90 @@ export const deleteDueDateById = async (req, res) => {
     res.status(200).json({ success: true, message: "Deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
+
+
+// ➕ Create Container
+export const createContainer = async (req, res) => {
+  try {
+    const { name, link } = req.body;
+    const file = req.file;
+
+    if (!name || !link || !file) {
+      return res.status(400).json({ success: false, message: "Name, link, and image are required." });
+    }
+
+    const uploaded = await cloudinary.uploader.upload(file.path, { folder: "containers" });
+    fs.unlinkSync(file.path); // delete local file
+
+    const container = await Container.create({
+      name,
+      link,
+      imageUrl: uploaded.secure_url
+    });
+
+    res.status(201).json({ success: true, data: container });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// 📥 Get All Containers
+export const getAllContainers = async (req, res) => {
+  try {
+    const containers = await Container.find().sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: containers });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// 📥 Get Single Container by ID
+export const getContainerById = async (req, res) => {
+  try {
+    const container = await Container.findById(req.params.id);
+    if (!container) return res.status(404).json({ message: "Container not found" });
+    res.status(200).json({ success: true, data: container });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ✏️ Update Container
+export const updateContainer = async (req, res) => {
+  try {
+    const { name, link } = req.body;
+    const file = req.file;
+    const container = await Container.findById(req.params.id);
+
+    if (!container) return res.status(404).json({ message: "Container not found" });
+
+    if (file) {
+      const uploaded = await cloudinary.uploader.upload(file.path, { folder: "containers" });
+      fs.unlinkSync(file.path);
+      container.imageUrl = uploaded.secure_url;
+    }
+
+    if (name) container.name = name;
+    if (link) container.link = link;
+
+    await container.save();
+
+    res.status(200).json({ success: true, data: container });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ❌ Delete Container
+export const deleteContainer = async (req, res) => {
+  try {
+    const container = await Container.findByIdAndDelete(req.params.id);
+    if (!container) return res.status(404).json({ message: "Container not found" });
+    res.status(200).json({ success: true, message: "Container deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
